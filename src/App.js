@@ -1,38 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BookCreate from './components/BookCreate';
 import BookList from './components/BookList';
+import axios from 'axios';
 
+const APIENDPOINT = 'http://localhost:3001/books'
 function App() {
   const [books, setBooks] = useState([]);
-  const MAX = 100000;
 
-  const addBook = (title) => {
-    const updatedBooks = [
-      ...books,
-      {
-        id: Math.floor(Math.random() * MAX),
-        title,
-      },
-    ];
-    setBooks(updatedBooks);
+  const fetchedBooks = async () => {
+    const response = await axios.get(APIENDPOINT);
+    console.log(response)
+    setBooks(response.data);
   };
 
-  const deleteBook = (id) => {
-    console.log('called deleteBook', id);
+  useEffect(() => {
+    fetchedBooks()
+  }, [])
+
+  const addBook = async (title) => {
+    const response = await axios.post(APIENDPOINT, {
+      title,
+    });
+
+    console.log(response);
+    setBooks([
+      ...books,
+      response.data
+    ]);
+  };
+
+  const deleteBook = async (id) => {    
+    const response = await axios.delete(APIENDPOINT + '/' + id)
     const updatedBooks = books.filter((book) => {
       return book.id !== id;
     });
-    console.log('updated', updatedBooks);
+
     setBooks(updatedBooks);
   };
 
-  const editBookTitle = (id, title) => {
-    console.log('editbooktitle called', id, title)
+  const editBookTitle = async (id, title) => {
+    const response = await axios.put(APIENDPOINT + '/' + id, {
+      title
+    })
+   
     const updatedBooks = books.map((book) => {
       if (book.id === id) {
         return {
           ...book,
-          title: title,
+          ...response.data
         };
       }
       return book;
